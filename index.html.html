@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<meta name="description" content="免费、简单的投资收益率与目标价格计算器。输入买入价，快速计算目标收益价格、当前收益率和亏损回本所需涨幅。">
+<title>价算｜投资收益率计算器</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--text:#171717;--muted:#737373;--line:#e5e5e5;--soft:#f0f0f2;--accent:#111}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{width:min(680px,100%);margin:auto;padding:24px 16px 56px}
+header{padding:10px 4px 22px}.brand{font-weight:800;font-size:15px;letter-spacing:.04em}.brand span{color:#777}.hero h1{font-size:32px;line-height:1.15;margin:18px 0 8px;letter-spacing:-.04em}.hero p{margin:0;color:var(--muted);font-size:15px;line-height:1.6}
+.card{background:var(--card);border-radius:22px;padding:20px;margin-top:14px;box-shadow:0 2px 16px rgba(0,0,0,.045)}
+h2{font-size:18px;margin:0 0 16px}.label{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;margin:14px 0 7px}
+input{width:100%;border:1px solid var(--line);background:#fafafa;border-radius:13px;padding:14px;font-size:20px;outline:none;color:var(--text)}
+input:focus{border-color:#999;background:#fff}.unit{font-size:13px;color:#888}
+.btnrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.btn{border:0;background:var(--soft);border-radius:11px;padding:11px 6px;font-size:14px}.btn:active{transform:scale(.98)}
+.targets{display:grid;grid-template-columns:1fr 1fr;gap:9px}.target{background:var(--soft);border-radius:15px;padding:14px}.target .rate{font-size:13px;color:var(--muted)}.target .price{font-size:22px;font-weight:750;margin-top:4px}
+.resultgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:var(--soft);border-radius:15px;padding:14px}.metric .k{font-size:12px;color:var(--muted)}.metric .v{font-size:22px;font-weight:750;margin-top:4px}
+.lossbox{background:#fafafa;border:1px solid var(--line);border-radius:15px;padding:15px}.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}.row:last-child{border-bottom:0}.formula{font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);border-radius:12px;padding:11px;margin-top:9px;overflow:auto}.tip{font-size:13px;color:var(--muted);line-height:1.65;margin-top:10px}
+footer{text-align:center;color:#999;font-size:12px;padding:22px 0}
+@media(max-width:390px){.hero h1{font-size:28px}.targets,.resultgrid{grid-template-columns:1fr 1fr}.target .price,.metric .v{font-size:20px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header><div class="brand">价算 <span>｜投资计算器</span></div><div class="hero"><h1>买入之后，涨到多少才算赚？</h1><p>输入一个价格，快速换算目标收益、当前收益，以及亏损后的回本涨幅。</p></div></header>
+
+<section class="card">
+<h2>① 目标价格</h2>
+<div class="label"><span>买入价格</span><span class="unit">P₀</span></div>
+<input id="buy" type="number" step="0.0001" value="3.88" inputmode="decimal" aria-label="买入价格">
+<div class="label"><span>目标收益率</span><span id="rateLabel">10%</span></div>
+<div class="btnrow">
+<button class="btn" onclick="setRate(.05)">+5%</button>
+<button class="btn" onclick="setRate(.10)">+10%</button>
+<button class="btn" onclick="setRate(.15)">+15%</button>
+<button class="btn" onclick="setRate(.20)">+20%</button>
+<button class="btn" onclick="setRate(.30)">+30%</button>
+<button class="btn" onclick="setRate(.50)">+50%</button>
+</div>
+<div class="label"><span>自定义收益率</span></div>
+<input id="customRate" type="number" step="0.1" value="10" inputmode="decimal" aria-label="自定义收益率">
+<div class="metric" style="margin-top:10px"><div class="k">目标价格</div><div class="v" id="targetPrice">4.268</div></div>
+<div class="tip">公式：目标价格 = 买入价格 × (1 + 目标收益率)</div>
+</section>
+
+<section class="card">
+<h2>② 快速目标价格表</h2>
+<div class="targets" id="targets"></div>
+</section>
+
+<section class="card">
+<h2>③ 当前收益</h2>
+<div class="label"><span>当前 / 卖出价格</span><span class="unit">P₁</span></div>
+<input id="sell" type="number" step="0.0001" placeholder="例如 4.46" inputmode="decimal" aria-label="当前或卖出价格">
+<div class="label"><span>投入本金（可选）</span><span class="unit">C</span></div>
+<input id="capital" type="number" step="0.01" value="1000" inputmode="decimal" aria-label="投入本金">
+<div class="resultgrid" style="margin-top:10px">
+<div class="metric"><div class="k">收益率</div><div class="v" id="currentRate">—</div></div>
+<div class="metric"><div class="k">盈亏金额</div><div class="v" id="gain">—</div></div>
+</div>
+<div class="tip">统一公式：盈亏 = 本金 × (当前价格 ÷ 买入价格 − 1)</div>
+</section>
+
+<section class="card">
+<h2>④ 亏损回本</h2>
+<div class="label"><span>亏损后的当前价格</span></div>
+<input id="lossPrice" type="number" step="0.0001" placeholder="例如 120" inputmode="decimal" aria-label="亏损后的当前价格">
+<div class="lossbox" style="margin-top:10px">
+<div class="row"><span>当前亏损率</span><strong id="lossRate">—</strong></div>
+<div class="row"><span>回到买入价需要上涨</span><strong id="recoverRate">—</strong></div>
+</div>
+<div class="tip">例如：150 跌到 120，亏损 20%；但从 120 回到 150，需要上涨 25%。</div>
+</section>
+
+<section class="card">
+<h2>公式速查</h2>
+<div class="formula">收益率 R = P₁ ÷ P₀ − 1</div>
+<div class="formula">目标价格 P₁ = P₀ × (1 + R)</div>
+<div class="formula">盈亏 G = C × (P₁ ÷ P₀ − 1)</div>
+<div class="formula">回本涨幅 = P₀ ÷ P₁ − 1</div>
+</section>
+<footer>价算 · 简单、快速、无需登录</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function n(id){return parseFloat($(id).value)}
+function fmt(x,dec=4){return Number.isFinite(x)?x.toFixed(dec).replace(/0+$/,'').replace(/\.$/,''):'—'}
+function money(x){return Number.isFinite(x)?(x>=0?'+':'')+x.toFixed(2):'—'}
+function setRate(r){$('customRate').value=(r*100).toFixed(1).replace('.0',''); $('rateLabel').textContent=(r*100).toFixed(0)+'%';calc()}
+function calc(){
+ const b=n('buy'), r=n('customRate')/100, s=n('sell'), c=n('capital'), lp=n('lossPrice');
+ if(!(b>0))return;
+ $('targetPrice').textContent=fmt(b*(1+r));
+ $('rateLabel').textContent=(r*100).toFixed(1).replace('.0','')+'%';
+ const rates=[.05,.10,.15,.20,.30,.50];
+ $('targets').innerHTML=rates.map(x=>`<div class="target"><div class="rate">+${x*100}%</div><div class="price">${fmt(b*(1+x))}</div></div>`).join('');
+ if(Number.isFinite(s)){
+   const rr=s/b-1;$('currentRate').textContent=(rr*100>=0?'+':'')+(rr*100).toFixed(2)+'%';
+   $('gain').textContent=Number.isFinite(c)?money(c*rr):'—';
+ }else{$('currentRate').textContent='—';$('gain').textContent='—'}
+ if(Number.isFinite(lp)&&lp>0){
+   const lr=lp/b-1, rec=b/lp-1;
+   $('lossRate').textContent=(lr*100>=0?'+':'')+(lr*100).toFixed(2)+'%';
+   $('recoverRate').textContent=(rec*100).toFixed(2)+'%';
+ }else{$('lossRate').textContent='—';$('recoverRate').textContent='—'}
+}
+['buy','customRate','sell','capital','lossPrice'].forEach(id=>$(id).addEventListener('input',calc));calc();
+</script>
+</body></html>
