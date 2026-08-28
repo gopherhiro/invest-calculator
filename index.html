@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#eef2ff">
+<meta name="description" content="免费、简单的投资收益率与目标价格计算器。输入买入价，快速计算目标收益价格、当前收益率和亏损回本所需涨幅。">
+<title>投资收益计算器</title>
+<style>
+/* 设计令牌（参考 ui-ux-pro-max 官方 demo "Vestia"：白页 + 深石板蓝卡片） */
+:root{
+ --bg:#eef2ff;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f1f5f9;
+ --navy:#1e293b;--blue:#2563eb;--green:#10b981;--green-deep:#047857;--red:#b91c1c;
+ --shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
+ --num:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+/* 极光渐变背景 */
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:radial-gradient(620px 420px at 18% 12%,rgba(96,165,250,.5),transparent 62%),radial-gradient(520px 400px at 84% 8%,rgba(129,140,248,.45),transparent 62%),radial-gradient(760px 520px at 50% 105%,rgba(167,139,250,.38),transparent 65%);animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-2%,1.5%,0) scale(1.06)}}
+.wrap{width:min(680px,100%);margin:auto;padding:24px 16px 64px}
+main{animation:in .45s ease both}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+header{padding:10px 4px 22px}
+.brand{font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--navy);display:flex;align-items:baseline;gap:12px}
+.brand .tag{font-size:20px;font-weight:700;letter-spacing:.02em;color:var(--blue)}
+.hero h1{font-size:16px;line-height:1.6;margin:12px 0 0;letter-spacing:.01em;font-weight:400;color:var(--muted)}
+/* 深色卡片：内部重定义令牌，浅色规则自动适配深底 */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:14px;box-shadow:var(--shadow);color:var(--ink)}
+h2{font-size:17px;line-height:1.4;margin:0 0 18px;letter-spacing:.02em;font-weight:600;color:var(--navy)}
+.label{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;letter-spacing:.05em;line-height:1.5;margin:16px 0 7px;padding:0 15px}
+.unit{font-size:12px;color:var(--muted);font-family:var(--num)}
+input{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:14px;padding:14px;font-size:20px;line-height:1;font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--ink);outline:none;transition:border-color .15s,background .15s,box-shadow .15s}
+input::placeholder{color:var(--muted);opacity:.6}
+.suffix-wrap{position:relative}
+.suffix{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);font-family:var(--num);pointer-events:none}
+.suffix-wrap input{padding-right:26px;padding-left:20px}
+.prefix{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);font-family:var(--num);pointer-events:none}
+.btnrow .suffix-wrap input{width:100%;min-height:44px;padding:6px 10px;padding-right:26px;padding-left:20px;font-size:13px;border-radius:999px;text-align:center}
+/* 输入框快速清除 × */
+.input-wrap{position:relative}
+.input-wrap input{padding-right:38px}
+.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:0;border-radius:50%;background:var(--soft);color:var(--muted);font-size:13px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;transition:background .15s,color .15s}
+.clear-btn:hover{background:var(--line);color:var(--ink)}
+.input-wrap.has-val .clear-btn{display:flex}
+input:hover{border-color:#94a3b8}
+input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.btnrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.btn{border:1px solid var(--line);background:transparent;border-radius:999px;min-height:44px;padding:12px 6px;font-size:13px;line-height:1;font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover{background:var(--soft);border-color:var(--blue)}
+.btn:active{transform:scale(.96);background:var(--blue);color:#fff}
+.btn.sel{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* 签名元素：目标价格答案区 */
+.hero-result{border-top:1px solid var(--line);margin-top:18px;padding-top:18px;text-align:center}
+.hero-label{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.hero-num{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:56px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:8px 0 10px;color:var(--ink)}
+.hero-num.tick{animation:tick .35s ease-out}
+@keyframes tick{0%{opacity:.35;transform:scale(.96)}100%{opacity:1;transform:scale(1)}}
+/* 投资颜色语义：涨绿跌红（符号仍保留，颜色不是唯一信息载体） */
+.unit.pos{color:var(--green-deep)}
+.unit.neg{color:var(--red)}
+.hero-cap{font-size:12px;color:var(--muted);letter-spacing:.04em}
+/* ② 行情表 */
+.quote-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;margin-bottom:4px;border-radius:12px;background:var(--soft);transition:background .2s}
+.quote-row:last-child{margin-bottom:0}
+.q-rate{font-size:12px;font-weight:600;color:var(--green-deep);font-family:var(--num)}
+.q-price{font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--ink);font-family:var(--num);font-variant-numeric:tabular-nums}
+.quote-row.hot{background:linear-gradient(90deg,rgba(16,185,129,.16),rgba(5,150,105,.10))}
+/* ③ 指标（绿=盈利，红=亏损，符号仍保留） */
+.resultgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.metric{background:var(--soft);border-radius:16px;padding:16px}
+.metric .k{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.metric .v{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:28px;font-weight:600;letter-spacing:-.02em;margin-top:6px;color:var(--ink)}
+.metric .v.pos,.row strong.pos{color:var(--green-deep)}
+.metric .v.neg,.row strong.neg{color:var(--red)}
+/* ④ 价格位置条 */
+.posbar{opacity:0;transition:opacity .25s;margin-top:12px}
+.posbar.on{opacity:1}
+.posbar-track{position:relative;height:6px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}
+.posbar-fill{position:absolute;left:-1px;top:-1px;bottom:-1px;background:linear-gradient(90deg,#10b981,var(--green));border-radius:999px;width:0;transition:width .3s ease}
+.posbar-fill::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+.posbar-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--num);margin-top:7px}
+.lossbox{margin-top:6px}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}
+.row:last-child{border-bottom:0}
+.row strong{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:15px}
+/* 公式速查 + 符号说明：无边框居中说明（非卡片） */
+.formula-card{background:transparent;border:0;box-shadow:none;margin-top:10px;padding:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.formula-card h2{font-size:12px;color:var(--muted);font-weight:600;margin:0}
+.sym-row{display:flex;flex-direction:column;gap:3px}
+.sym{font-size:12px;color:var(--muted)}
+.sym b{font-family:var(--num);color:var(--muted);font-weight:400;display:inline-block;min-width:2.5em}
+.f-l{display:inline-block;min-width:6em;text-align:left}
+.f-eq{margin-right:.5em}
+.formula-grid{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.formula{font:12px/1.6 var(--num);color:var(--muted)}
+.tip{font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px}
+@media(max-width:390px){.hero h1{font-size:15px}.hero-num{font-size:44px}.metric .v{font-size:24px}}
+/* 桌面端：目标价格整行；其余三卡并排；公式速查右侧竖列 */
+@media(min-width:1024px){
+ .wrap{width:min(1240px,100%);display:grid;grid-template-columns:1.1fr 1fr;gap:7px;align-items:stretch;padding:14px 20px 1px}
+ header{grid-column:1/-1;padding:4px 4px 3px}
+ .hero h1{font-size:15px;margin:4px 0 0}
+ .card{margin-top:0;padding:10px 14px}
+ .hero-card{grid-column:1}
+ .quote-card{grid-column:2}
+ .return-card{grid-column:1}
+ .loss-card{grid-column:2}
+ .formula-card{grid-column:1/-1}
+ h2{font-size:16px;margin:0 0 1px;padding:0 11px}
+ .formula-card h2{padding:0}
+ input{padding:6px 10px;font-size:16px;border-radius:12px}
+ .label{margin:5px 0 2px;line-height:1.3;padding:0 11px}
+ .tip{margin-top:2px;font-size:12px;line-height:1.5}
+ /* 目标价格：左列买入价，右列收益率+自定义收益率 */
+ .hero-card{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start}
+ .hero-card h2{grid-column:1/-1}
+ .hero-card .label{width:auto;margin:5px 0 3px}
+ .hero-card .buy-label{grid-column:1;grid-row:2}
+ .hero-card .buy-wrap{grid-column:1;grid-row:3}
+ .hero-card .buy-wrap input{width:100%}
+ .hero-card .rate-label{grid-column:2;grid-row:2}
+ .hero-card .btnrow{grid-column:2;grid-row:3;width:100%;grid-template-columns:repeat(3,1fr);margin:0}
+ .hero-card .btn{min-height:28px;padding:4px;padding-left:10px;font-size:12px;text-align:left}
+ .hero-card .btnrow .suffix-wrap input{width:100%;min-height:28px;height:28px;padding:4px 10px;padding-right:24px;padding-left:20px;font-size:12px;text-align:left}
+ .hero-card .clear-btn{right:10px;width:16px;height:16px;font-size:12px}
+ .hero-card .hero-result{grid-column:1/-1;grid-row:4;margin-top:3px;padding-top:3px}
+ .hero-num{font-size:26px;margin:1px 0 3px}
+ /* 快速目标价格：表格形式，左收益率右价格 */
+ .quote-card{display:flex;flex-direction:column}
+ .quote-card .targets{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:space-evenly}
+ .quote-card .quote-row{flex-direction:row;align-items:center;justify-content:space-between;padding:6px 12px;margin:0}
+ .quote-card .q-rate{font-size:13px}
+ .quote-card .q-price{font-size:20px;line-height:1.2}
+ /* 当前收益：两个输入同行，下面大数字结果 */
+ .return-card{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start}
+ .return-card h2{grid-column:1/-1}
+ .return-card .label{margin:5px 0 3px}
+ .return-card .sell-label{grid-column:1;grid-row:2}
+ .return-card .sell-wrap{grid-column:1;grid-row:3}
+ .return-card .sell-wrap input{width:100%}
+ .return-card .capital-label{grid-column:2;grid-row:2}
+ .return-card .capital-wrap{grid-column:2;grid-row:3}
+ .return-card .capital-wrap input{width:100%}
+ .return-card .resultgrid{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:7px 0 0;border-top:1px solid var(--line);padding-top:6px}
+ .return-card .metric{display:block;background:none;padding:0}
+ .return-card .metric .k{font-size:12px}
+ .return-card .metric .v{font-size:30px;line-height:1.05;font-weight:700;margin-top:2px}
+ /* 亏损回本：上输入条件，下大数字结果 */
+ .loss-card{display:block}
+ .loss-card .label{margin:16px 0 12px}
+ .loss-card .loss-wrap{width:50%}
+ .loss-card .loss-wrap input{width:100%}
+ .loss-card .posbar{width:50%;margin-top:2px}
+ .loss-card .lossbox{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 0;border-top:1px solid var(--line);padding-top:3px}
+ .loss-card .row{display:block;border:0;padding:0;font-size:12px}
+ .loss-card .row span{font-size:12px;color:var(--muted)}
+ .loss-card .row strong{display:block;font-size:28px;line-height:1.05;font-weight:700;margin-top:2px}
+ .loss-card .tip{margin-top:0}
+ /* 公式速查 + 符号说明：符号列 | 公式列 */
+ .formula-card{grid-column:1/-1;margin-top:0;padding:0;display:grid;grid-template-columns:auto auto;column-gap:44px;justify-content:flex-start;align-items:start}
+ .formula-card h2{grid-column:1/-1;grid-row:1;font-size:13px}
+ .sym-row{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:2px}
+ .sym{font-size:12px;line-height:1.4}
+ .formula-grid{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:2px}
+ .formula{font-size:12px;line-height:1.4}
+}
+/* 窄桌面：标题与卡片再收紧 */
+@media(min-width:1024px) and (max-width:1150px){
+ .hero h1{font-size:14px;margin:3px 0 1px}
+ .wrap{gap:6px;padding:8px 16px 4px}
+ header{padding:2px 4px 4px}
+ .card{padding:5px 9px}
+ .label{margin:3px 0 0}
+ input{padding:3px 10px}
+ .hero-card .btn{min-height:26px}
+ .hero-card .btnrow .suffix-wrap input{min-height:26px;height:26px}
+ .hero-num{font-size:22px}
+ .hero-card .hero-result{margin-top:4px;padding-top:4px}
+ .quote-card .q-price{font-size:20px}
+ .return-card .metric .v{font-size:26px}
+ .return-card .resultgrid{padding-top:6px;gap:6px}
+ .loss-card .row strong{font-size:16px}
+ .formula-card{margin-top:4px}
+ .formula{font-size:11px}
+ .sym{font-size:11px}
+ .formula-grid{gap:2px}
+ .sym-row{gap:2px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}body::before{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header><div class="brand"><span class="tag">简单 · 快速 · 计算投资收益</span></div><div class="hero"><h1>输入买入价格、当前价格和本金，快速计算投资收益率、盈利/亏损金额，并根据目标收益率反推目标价格。</h1></div></header>
+
+<section class="card hero-card">
+<h2>目标价格</h2>
+<div class="label buy-label"><span>买入价格（P₀）</span></div>
+<div class="input-wrap buy-wrap"><input id="buy" type="number" step="0.0001" value="100" inputmode="decimal" aria-label="买入价格"><button class="clear-btn" type="button" tabindex="-1" aria-label="清除买入价格">×</button></div>
+<div class="label rate-label"><span>目标收益率（R）</span><span id="rateLabel" class="unit">10%</span></div>
+<div class="btnrow">
+<button class="btn" onclick="setRate(.05)">+5%</button>
+<button class="btn" onclick="setRate(.10)">+10%</button>
+<button class="btn" onclick="setRate(.15)">+15%</button>
+<button class="btn" onclick="setRate(.20)">+20%</button>
+<button class="btn" onclick="setRate(.25)">+25%</button>
+<button class="btn" onclick="setRate(.30)">+30%</button>
+<button class="btn" onclick="setRate(.50)">+50%</button>
+<button class="btn" onclick="setRate(.60)">+60%</button>
+<div class="suffix-wrap"><span class="prefix">+</span><input id="customRate" type="number" step="0.1" value="10" inputmode="decimal" aria-label="自定义收益率"><span class="suffix">%</span></div>
+</div>
+<div class="hero-result">
+<div class="hero-label">目标价格</div>
+<div class="hero-num" id="targetPrice">4.268</div>
+</div>
+</section>
+
+<section class="card quote-card">
+<div class="targets" id="targets"></div>
+</section>
+
+<section class="card return-card">
+<h2>当前收益</h2>
+<div class="label sell-label"><span>卖出/当前价格（P₁）</span></div>
+<div class="input-wrap sell-wrap"><input id="sell" type="number" step="0.0001" inputmode="decimal" aria-label="当前或卖出价格"><button class="clear-btn" type="button" tabindex="-1" aria-label="清除卖出价格">×</button></div>
+<div class="label capital-label"><span>投入本金（C）</span></div>
+<div class="input-wrap capital-wrap"><input id="capital" type="number" step="0.01" value="1000" inputmode="decimal" aria-label="投入本金"><button class="clear-btn" type="button" tabindex="-1" aria-label="清除投入本金">×</button></div>
+<div class="resultgrid">
+<div class="metric"><div class="k">收益率（R）</div><div class="v" id="currentRate">—</div></div>
+<div class="metric"><div class="k">盈亏金额（G）</div><div class="v" id="gain">—</div></div>
+</div>
+</section>
+
+<section class="card loss-card">
+<h2>亏损回本</h2>
+<div class="label loss-label"><span>亏损后的当前价格（P₁）</span></div>
+<div class="input-wrap loss-wrap"><input id="lossPrice" type="number" step="0.0001" inputmode="decimal" aria-label="亏损后的当前价格"><button class="clear-btn" type="button" tabindex="-1" aria-label="清除亏损后价格">×</button></div>
+<div class="posbar" id="posBar">
+<div class="posbar-track"><div class="posbar-fill" id="posFill"></div></div>
+<div class="posbar-scale"><span>0</span><span>买入价 P₀</span></div>
+</div>
+<div class="lossbox">
+<div class="row"><span>当前亏损率（R）</span><strong id="lossRate">—</strong></div>
+<div class="row"><span>回到买入价需要上涨</span><strong id="recoverRate">—</strong></div>
+</div>
+</section>
+
+<section class="card formula-card">
+<h2>公式速查</h2>
+<div class="sym-row">
+<span class="sym"><b>P₀：</b>买入价格</span>
+<span class="sym"><b>P₁：</b>卖出/当前价格</span>
+<span class="sym"><b>R：</b>收益率</span>
+<span class="sym"><b>C：</b>投入本金</span>
+<span class="sym"><b>G：</b>盈亏金额</span>
+</div>
+<div class="formula-grid">
+<div class="formula"><span class="f-l">收益率 R</span><span class="f-eq">=</span><span>P₁ ÷ P₀ − 1</span></div>
+<div class="formula"><span class="f-l">目标价格 P₁</span><span class="f-eq">=</span><span>P₀ × (1 + R)</span></div>
+<div class="formula"><span class="f-l">盈亏 G</span><span class="f-eq">=</span><span>C × (P₁ ÷ P₀ − 1)</span></div>
+<div class="formula"><span class="f-l">回本涨幅</span><span class="f-eq">=</span><span>P₀ ÷ P₁ − 1</span></div>
+</div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function n(id){return parseFloat($(id).value)}
+function fmt(x,dec=2){return Number.isFinite(x)?x.toFixed(dec):'—'}
+function money(x){return Number.isFinite(x)?(x>=0?'+':'')+x.toFixed(2):'—'}
+function setRate(r){$('customRate').value=(r*100).toFixed(1).replace('.0','');$('rateLabel').textContent=(r*100).toFixed(0)+'%';calc()}
+function calc(){
+ const b=n('buy'),r=n('customRate')/100,s=n('sell'),c=n('capital'),lp=n('lossPrice');
+ if(!(b>0))return;
+ const tp=$('targetPrice'),txt=fmt(b*(1+r));
+ if(tp.textContent!==txt){tp.textContent=txt;tp.classList.remove('tick');void tp.offsetWidth;tp.classList.add('tick')}
+ const rp=r*100;
+ $('rateLabel').textContent=Number.isFinite(rp)?(rp.toFixed(1).replace('.0','')+'%'):'—';
+ $('rateLabel').className='unit '+(r>0?'pos':r<0?'neg':'');
+ const rates=[.05,.10,.15,.20,.25,.30,.50,.60];
+ $('targets').innerHTML=rates.map(x=>`<div class="quote-row${Math.abs(r-x)<0.005?' hot':''}"><span class="q-rate">+${x*100}%</span><span class="q-price">${fmt(b*(1+x))}</span></div>`).join('');
+ document.querySelectorAll('.btnrow .btn').forEach((btn,i)=>{btn.classList.toggle('sel',Math.abs(r-rates[i])<0.005)});
+ if(Number.isFinite(s)){
+  const rr=s/b-1;
+  $('currentRate').textContent=(rr*100>=0?'+':'')+(rr*100).toFixed(2)+'%';
+  $('currentRate').className='v '+(rr>=0?'pos':'neg');
+  const hasC=Number.isFinite(c);
+  $('gain').textContent=hasC?money(c*rr):'—';
+  $('gain').className='v '+(hasC?(c*rr>=0?'pos':'neg'):'');
+ }else{
+  $('currentRate').textContent='—';$('currentRate').className='v';
+  $('gain').textContent='—';$('gain').className='v';
+ }
+ if(Number.isFinite(lp)&&lp>0){
+  $('posFill').style.width=(Math.min(1,Math.max(0,lp/b))*100).toFixed(2)+'%';
+  $('posBar').classList.add('on');
+  const lr=lp/b-1,rec=b/lp-1;
+  $('lossRate').textContent=(lr*100>=0?'+':'')+(lr*100).toFixed(2)+'%';
+  $('lossRate').className=lr>=0?'pos':'neg';
+  $('recoverRate').textContent=(rec*100).toFixed(2)+'%';
+  $('recoverRate').className=rec>=0?'pos':'neg';
+ }else{
+  $('posBar').classList.remove('on');
+  $('lossRate').textContent='—';$('lossRate').className='';
+  $('recoverRate').textContent='—';$('recoverRate').className='';
+ }
+}
+['buy','customRate','sell','capital','lossPrice'].forEach(id=>{
+ const inp=$(id);
+ inp.addEventListener('input',calc);
+ const upd=()=>inp.parentElement.classList.toggle('has-val',inp.value!=='');
+ inp.addEventListener('input',upd);
+ upd();
+});
+document.querySelectorAll('.clear-btn').forEach(btn=>{
+ btn.addEventListener('click',()=>{
+  const inp=btn.parentElement.querySelector('input');
+  inp.value='';
+  inp.dispatchEvent(new Event('input'));
+  inp.focus();
+ });
+});
+calc();
+</script>
+</body></html>
