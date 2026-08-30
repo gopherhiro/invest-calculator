@@ -86,16 +86,13 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}
 .row:last-child{border-bottom:0}
 .row strong{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:15px}
-/* 公式速查 + 符号说明：无边框居中说明（非卡片） */
-.formula-card{background:transparent;border:0;box-shadow:none;margin-top:10px;padding:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
-.formula-card h2{font-size:12px;color:var(--muted);font-weight:600;margin:0}
-.sym-row{display:flex;flex-direction:column;gap:3px}
-.sym{font-size:12px;color:var(--muted)}
-.sym b{font-family:var(--num);color:var(--muted);font-weight:400;display:inline-block;min-width:2.5em}
-.f-l{display:inline-block;min-width:6em;text-align:left}
-.f-eq{margin-right:.5em}
-.formula-grid{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
-.formula{font:12px/1.6 var(--num);color:var(--muted)}
+/* 公式速查：两列对齐表格，左列含义，右列变量=公式 */
+.formula-card{background:transparent;border:0;box-shadow:none;margin-top:10px;padding:0}
+.formula-card h2{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 6px}
+.ftable{display:grid;grid-template-columns:auto 1fr;gap:2px 20px}
+.ft-row{display:contents}
+.ft-name{font-size:12px;color:var(--muted);line-height:1.7;white-space:nowrap}
+.ft-expr{font:12px/1.7 var(--num);color:var(--muted)}
 .tip{font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px}
 @media(max-width:390px){.hero h1{font-size:15px}.hero-num{font-size:44px}.metric .v{font-size:24px}}
 /* 桌面端：目标价格整行；其余三卡并排；公式速查右侧竖列 */
@@ -159,13 +156,9 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
  .loss-card .row span{font-size:12px;color:var(--muted)}
  .loss-card .row strong{display:block;font-size:28px;line-height:1.05;font-weight:700;margin-top:2px}
  .loss-card .tip{margin-top:0}
- /* 公式速查 + 符号说明：符号列 | 公式列 */
- .formula-card{grid-column:1/-1;margin-top:0;padding:0;display:grid;grid-template-columns:auto auto;column-gap:44px;justify-content:flex-start;align-items:start}
- .formula-card h2{grid-column:1/-1;grid-row:1;font-size:13px}
- .sym-row{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:2px}
- .sym{font-size:12px;line-height:1.4}
- .formula-grid{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:2px}
- .formula{font-size:12px;line-height:1.4}
+  /* 公式速查：全宽两列表格 */
+  .formula-card{grid-column:1/-1;margin-top:0;padding:0}
+  .formula-card h2{font-size:12px;margin-bottom:4px}
 }
 /* 窄桌面：标题与卡片再收紧 */
 @media(min-width:1024px) and (max-width:1150px){
@@ -183,11 +176,8 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
  .return-card .metric .v{font-size:26px}
  .return-card .resultgrid{padding-top:6px;gap:6px}
  .loss-card .row strong{font-size:16px}
- .formula-card{margin-top:4px}
- .formula{font-size:11px}
- .sym{font-size:11px}
- .formula-grid{gap:2px}
- .sym-row{gap:2px}
+  .formula-card{margin-top:4px}
+  .ft-name,.ft-expr{font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}body::before{animation:none!important}}
 </style>
@@ -244,27 +234,21 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 </div>
 <div class="lossbox">
 <div class="row"><span>当前亏损率（R）</span><strong id="lossRate">—</strong></div>
-<div class="row"><span>回到买入价需要上涨</span><strong id="recoverRate">—</strong></div>
+<div class="row"><span>回到买入价需要上涨（X）</span><strong id="recoverRate">—</strong></div>
 </div>
 </section>
 
 <section class="card formula-card">
 <h2>公式速查</h2>
-<div class="sym-row">
-<span class="sym"><b>P₀：</b>买入价格</span>
-<span class="sym"><b>P₁：</b>卖出/当前价格</span>
-<span class="sym"><b>R：</b>收益率</span>
-<span class="sym"><b>C：</b>投入本金</span>
-<span class="sym"><b>G：</b>盈亏金额</span>
-</div>
-<div class="formula-grid">
-<div class="formula"><span class="f-l">收益率 R</span><span class="f-eq">=</span><span>P₁ ÷ P₀ − 1</span></div>
-<div class="formula"><span class="f-l">目标价格 P₁</span><span class="f-eq">=</span><span>P₀ × (1 + R)</span></div>
-<div class="formula"><span class="f-l">盈亏 G</span><span class="f-eq">=</span><span>C × (P₁ ÷ P₀ − 1)</span></div>
-<div class="formula"><span class="f-l">回本涨幅</span><span class="f-eq">=</span><span>P₀ ÷ P₁ − 1</span></div>
+<div class="ftable">
+<div class="ft-row"><span class="ft-name">收益率</span><span class="ft-expr">R = P₁ ÷ P₀ − 1</span></div>
+<div class="ft-row"><span class="ft-name">目标价格</span><span class="ft-expr">P₁ = P₀ × (1 + R)</span></div>
+<div class="ft-row"><span class="ft-name">盈亏金额</span><span class="ft-expr">G = C × (P₁ ÷ P₀ − 1)</span></div>
+<div class="ft-row"><span class="ft-name">回本涨幅</span><span class="ft-expr">X = P₀ ÷ P₁ − 1</span></div>
 </div>
 </section>
 </main>
+<footer style="text-align:center;padding:18px 0 24px;font-size:12px;color:var(--muted);font-family:var(--num);letter-spacing:.04em">© 2026 Hiro · All rights reserved</footer>
 <script>
 const $=id=>document.getElementById(id);
 function n(id){return parseFloat($(id).value)}
