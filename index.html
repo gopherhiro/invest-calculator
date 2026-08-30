@@ -299,7 +299,7 @@ function calc(){
   const lr=lp/b-1,rec=b/lp-1;
   $('lossRate').textContent=(lr*100>=0?'+':'')+(lr*100).toFixed(2)+'%';
   $('lossRate').className=lr>=0?'pos':'neg';
-  $('recoverRate').textContent=(rec*100).toFixed(2)+'%';
+  $('recoverRate').textContent=(rec*100>=0?'+':'')+(rec*100).toFixed(2)+'%';
   $('recoverRate').className=rec>=0?'pos':'neg';
  }else{
   $('posBar').classList.remove('on');
