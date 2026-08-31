@@ -3,16 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#eef2ff">
+<meta name="theme-color" content="#eef2ff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
 <meta name="description" content="免费、简单的投资收益率与目标价格计算器。输入买入价，快速计算目标收益价格、当前收益率和亏损回本所需涨幅。">
 <title>投资收益计算器</title>
 <style>
 /* 设计令牌（参考 ui-ux-pro-max 官方 demo "Vestia"：白页 + 深石板蓝卡片） */
 :root{
- --bg:#eef2ff;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f1f5f9;
+ --bg:#eef2ff;--card:#fff;--ink:#0f172a;--muted:#475569;--line:#e2e8f0;--soft:#f1f5f9;
  --navy:#1e293b;--blue:#2563eb;--green:#10b981;--green-deep:#047857;--red:#b91c1c;
  --shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
  --num:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media(prefers-color-scheme:dark){
+ :root{
+  --bg:#0b1120;--card:#111827;--ink:#e5e7eb;--muted:#94a3b8;--line:#1f2937;--soft:#1a2333;
+  --navy:#e2e8f0;--blue:#3b82f6;--green:#10b981;--green-deep:#34d399;--red:#f87171;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.5);
+ }
+ body::before{background:radial-gradient(620px 420px at 18% 12%,rgba(59,130,246,.28),transparent 62%),radial-gradient(520px 400px at 84% 8%,rgba(99,102,241,.24),transparent 62%),radial-gradient(760px 520px at 50% 105%,rgba(139,92,246,.2),transparent 65%)}
 }
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
@@ -32,6 +42,8 @@ h2{font-size:17px;line-height:1.4;margin:0 0 18px;letter-spacing:.02em;font-weig
 .label{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;letter-spacing:.05em;line-height:1.5;margin:16px 0 7px;padding:0 15px}
 .unit{font-size:12px;color:var(--muted);font-family:var(--num)}
 input{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:14px;padding:14px;font-size:20px;line-height:1;font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--ink);outline:none;transition:border-color .15s,background .15s,box-shadow .15s}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
 input::placeholder{color:var(--muted);opacity:.6}
 .suffix-wrap{position:relative}
 .suffix{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);font-family:var(--num);pointer-events:none}
@@ -41,6 +53,7 @@ input::placeholder{color:var(--muted);opacity:.6}
 /* 输入框快速清除 × */
 .input-wrap{position:relative}
 .input-wrap input{padding-right:38px}
+.input-wrap.invalid input{border-color:var(--red)}
 .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:0;border-radius:50%;background:var(--soft);color:var(--muted);font-size:13px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;transition:background .15s,color .15s}
 .clear-btn:hover{background:var(--line);color:var(--ink)}
 .input-wrap.has-val .clear-btn{display:flex}
@@ -56,6 +69,7 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 .hero-result{border-top:1px solid var(--line);margin-top:18px;padding-top:18px;text-align:center}
 .hero-label{font-size:12px;color:var(--muted);letter-spacing:.06em}
 .hero-num{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:56px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:8px 0 10px;color:var(--ink)}
+.hero-num.msg{font-size:16px;font-weight:600;letter-spacing:.02em;color:var(--red)}
 .hero-num.tick{animation:tick .35s ease-out}
 @keyframes tick{0%{opacity:.35;transform:scale(.96)}100%{opacity:1;transform:scale(1)}}
 /* 投资颜色语义：涨绿跌红（符号仍保留，颜色不是唯一信息载体） */
@@ -200,11 +214,11 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 <button class="btn" onclick="setRate(.30)">+30%</button>
 <button class="btn" onclick="setRate(.50)">+50%</button>
 <button class="btn" onclick="setRate(.60)">+60%</button>
-<div class="suffix-wrap"><span class="prefix">+</span><input id="customRate" type="number" step="0.1" value="10" inputmode="decimal" aria-label="自定义收益率"><span class="suffix">%</span></div>
+<div class="suffix-wrap"><span class="prefix">+</span><input id="customRate" type="number" step="0.1" min="0" value="10" inputmode="decimal" aria-label="自定义收益率"><span class="suffix">%</span></div>
 </div>
 <div class="hero-result">
 <div class="hero-label">目标价格</div>
-<div class="hero-num" id="targetPrice">4.268</div>
+<div class="hero-num" id="targetPrice">110.00</div>
 </div>
 </section>
 
@@ -236,10 +250,12 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 <div class="row"><span>当前亏损率（R）</span><strong id="lossRate">—</strong></div>
 <div class="row"><span>回到买入价需要上涨（X）</span><strong id="recoverRate">—</strong></div>
 </div>
+<p class="tip" id="lossHint" hidden>当前价格未低于买入价，尚未发生亏损，无需计算回本涨幅。</p>
 </section>
 
 <section class="card formula-card">
 <h2>公式速查</h2>
+<p class="tip" style="margin-top:0">P₀ 买入价 · P₁ 当前/目标价 · C 本金 · R 收益率 · X 回本涨幅</p>
 <div class="ftable">
 <div class="ft-row"><span class="ft-name">收益率</span><span class="ft-expr">R = P₁ ÷ P₀ − 1</span></div>
 <div class="ft-row"><span class="ft-name">目标价格</span><span class="ft-expr">P₁ = P₀ × (1 + R)</span></div>
@@ -251,18 +267,38 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 <footer style="text-align:center;padding:18px 0 24px;font-size:12px;color:var(--muted);font-family:var(--num);letter-spacing:.04em">© 2026 Hiro · All rights reserved</footer>
 <script>
 const $=id=>document.getElementById(id);
+const nf=new Intl.NumberFormat('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
 function n(id){return parseFloat($(id).value)}
-function fmt(x,dec=2){return Number.isFinite(x)?x.toFixed(dec):'—'}
-function money(x){return Number.isFinite(x)?(x>=0?'+':'')+x.toFixed(2):'—'}
-function setRate(r){$('customRate').value=(r*100).toFixed(1).replace('.0','');$('rateLabel').textContent=(r*100).toFixed(0)+'%';calc()}
+function fmt(x){return Number.isFinite(x)?nf.format(x):'—'}
+function money(x){return Number.isFinite(x)?(x>=0?'+':'')+nf.format(x):'—'}
+function setRate(r){$('customRate').value=(r*100).toFixed(1).replace('.0','');calc()}
 function calc(){
- const b=n('buy'),r=n('customRate')/100,s=n('sell'),c=n('capital'),lp=n('lossPrice');
- if(!(b>0))return;
+ const b=n('buy'),s=n('sell'),c=n('capital'),lp=n('lossPrice');
+ let r=n('customRate')/100;
+ if(r<0){r=0;$('customRate').value='0'}
+ const buyWrap=$('buy').closest('.input-wrap');
+ if(!(b>0)){
+  buyWrap.classList.add('invalid');
+  $('targetPrice').textContent='请输入买入价格';
+  $('targetPrice').classList.add('msg');
+  $('rateLabel').textContent='—';$('rateLabel').className='unit';
+  $('targets').innerHTML='';
+  document.querySelectorAll('.btnrow .btn').forEach(btn=>btn.classList.remove('sel'));
+  $('currentRate').textContent='—';$('currentRate').className='v';
+  $('gain').textContent='—';$('gain').className='v';
+  $('posBar').classList.remove('on');
+  $('lossRate').textContent='—';$('lossRate').className='';
+  $('recoverRate').textContent='—';$('recoverRate').className='';
+  $('lossHint').hidden=true;
+  return;
+ }
+ buyWrap.classList.remove('invalid');
+ $('targetPrice').classList.remove('msg');
  const tp=$('targetPrice'),txt=fmt(b*(1+r));
  if(tp.textContent!==txt){tp.textContent=txt;tp.classList.remove('tick');void tp.offsetWidth;tp.classList.add('tick')}
  const rp=r*100;
  $('rateLabel').textContent=Number.isFinite(rp)?(rp.toFixed(1).replace('.0','')+'%'):'—';
- $('rateLabel').className='unit '+(r>0?'pos':r<0?'neg':'');
+ $('rateLabel').className='unit '+(r>0?'pos':'');
  const rates=[.05,.10,.15,.20,.25,.30,.50,.60];
  $('targets').innerHTML=rates.map(x=>`<div class="quote-row${Math.abs(r-x)<0.005?' hot':''}"><span class="q-rate">+${x*100}%</span><span class="q-price">${fmt(b*(1+x))}</span></div>`).join('');
  document.querySelectorAll('.btnrow .btn').forEach((btn,i)=>{btn.classList.toggle('sel',Math.abs(r-rates[i])<0.005)});
@@ -277,7 +313,9 @@ function calc(){
   $('currentRate').textContent='—';$('currentRate').className='v';
   $('gain').textContent='—';$('gain').className='v';
  }
- if(Number.isFinite(lp)&&lp>0){
+ const isLoss=Number.isFinite(lp)&&lp>0&&lp<b;
+ const notALoss=Number.isFinite(lp)&&lp>0&&lp>=b;
+ if(isLoss){
   $('posFill').style.width=(Math.min(1,Math.max(0,lp/b))*100).toFixed(2)+'%';
   $('posBar').classList.add('on');
   const lr=lp/b-1,rec=b/lp-1;
@@ -285,10 +323,12 @@ function calc(){
   $('lossRate').className=lr>=0?'pos':'neg';
   $('recoverRate').textContent=(rec*100>=0?'+':'')+(rec*100).toFixed(2)+'%';
   $('recoverRate').className=rec>=0?'pos':'neg';
+  $('lossHint').hidden=true;
  }else{
   $('posBar').classList.remove('on');
   $('lossRate').textContent='—';$('lossRate').className='';
   $('recoverRate').textContent='—';$('recoverRate').className='';
+  $('lossHint').hidden=!notALoss;
  }
 }
 ['buy','customRate','sell','capital','lossPrice'].forEach(id=>{
