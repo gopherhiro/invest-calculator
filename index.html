@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#eef2ff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#eef2f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
 <meta name="description" content="免费、简单的投资收益率与目标价格计算器。输入买入价，快速计算目标收益价格、当前收益率和亏损回本所需涨幅。">
@@ -11,34 +11,41 @@
 <style>
 /* 设计令牌（参考 ui-ux-pro-max 官方 demo "Vestia"：白页 + 深石板蓝卡片） */
 :root{
- --bg:#eef2ff;--card:#fff;--ink:#0f172a;--muted:#475569;--line:#e2e8f0;--soft:#f1f5f9;
- --navy:#1e293b;--blue:#2563eb;--green:#10b981;--green-deep:#047857;--red:#b91c1c;
+ --bg:#eef2f6;--card:#fff;--ink:#0f172a;--muted:#475569;--line:#e2e8f0;--soft:#f1f5f9;
+ --navy:#1e293b;--blue:#1d4ed8;--blue-rgb:29,78,216;--green:#10b981;--green-deep:#047857;--red:#b91c1c;
+ --teal:#0e7490;--teal-rgb:14,116,144;--violet:#9333ea;--violet-rgb:147,51,234;--amber:#b45309;--amber-rgb:180,83,9;
+ --hero-muted:#59647a;--formula-muted:#64748b;
  --shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
  --num:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media(prefers-color-scheme:dark){
  :root{
   --bg:#0b1120;--card:#111827;--ink:#e5e7eb;--muted:#94a3b8;--line:#1f2937;--soft:#1a2333;
-  --navy:#e2e8f0;--blue:#3b82f6;--green:#10b981;--green-deep:#34d399;--red:#f87171;
+  --navy:#e2e8f0;--blue:#5b8dfd;--blue-rgb:91,141,253;--green:#10b981;--green-deep:#34d399;--red:#f87171;
+  --teal:#22d3ee;--teal-rgb:34,211,238;--violet:#c084fc;--violet-rgb:192,132,252;--amber:#f59e0b;--amber-rgb:245,158,11;
+  --hero-muted:#94a3b8;--formula-muted:#94a3b8;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.5);
  }
- body::before{background:radial-gradient(620px 420px at 18% 12%,rgba(59,130,246,.28),transparent 62%),radial-gradient(520px 400px at 84% 8%,rgba(99,102,241,.24),transparent 62%),radial-gradient(760px 520px at 50% 105%,rgba(139,92,246,.2),transparent 65%)}
+ body::before{background:radial-gradient(760px 520px at 8% -8%,rgba(91,141,253,.30),transparent 62%),radial-gradient(680px 480px at 96% -4%,rgba(34,211,238,.12),transparent 55%),radial-gradient(720px 520px at 100% 105%,rgba(192,132,252,.11),transparent 55%),radial-gradient(640px 460px at -4% 105%,rgba(245,158,11,.10),transparent 55%),linear-gradient(180deg,rgba(91,141,253,.16) 0%,rgba(91,141,253,.06) 55%,rgba(34,211,238,.05) 100%)}
 }
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
-/* 极光渐变背景 */
-body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:radial-gradient(620px 420px at 18% 12%,rgba(96,165,250,.5),transparent 62%),radial-gradient(520px 400px at 84% 8%,rgba(129,140,248,.45),transparent 62%),radial-gradient(760px 520px at 50% 105%,rgba(167,139,250,.38),transparent 65%);animation:drift 14s ease-in-out infinite alternate}
-@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-2%,1.5%,0) scale(1.06)}}
+/* 静态背景光晕：四角呼应四张卡片强调色，底层再叠一层对角线性渐变做整体过渡，不做常驻动效 */
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(760px 520px at 8% -8%,rgba(29,78,216,.20),transparent 62%),radial-gradient(680px 480px at 96% -4%,rgba(14,116,144,.09),transparent 55%),radial-gradient(720px 520px at 100% 105%,rgba(147,51,234,.08),transparent 55%),radial-gradient(640px 460px at -4% 105%,rgba(180,83,9,.08),transparent 55%),linear-gradient(180deg,rgba(29,78,216,.10) 0%,rgba(29,78,216,.04) 55%,rgba(14,116,144,.03) 100%)}
 .wrap{width:min(680px,100%);margin:auto;padding:24px 16px 64px}
 main{animation:in .45s ease both}
 @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 header{padding:10px 4px 22px}
-.brand{font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--navy);display:flex;align-items:baseline;gap:12px}
-.brand .tag{font-size:20px;font-weight:700;letter-spacing:.02em;color:var(--blue)}
-.hero h1{font-size:16px;line-height:1.6;margin:12px 0 0;letter-spacing:.01em;font-weight:400;color:var(--muted)}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand .tag{font-size:19px;font-weight:700;letter-spacing:.02em;color:var(--blue)}
+.hero h1{font-size:16px;line-height:1.6;margin:12px 0 0;letter-spacing:.01em;font-weight:400;color:var(--hero-muted)}
 /* 深色卡片：内部重定义令牌，浅色规则自动适配深底 */
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:14px;box-shadow:var(--shadow);color:var(--ink)}
-h2{font-size:17px;line-height:1.4;margin:0 0 18px;letter-spacing:.02em;font-weight:600;color:var(--navy)}
+.hero-card{--accent:var(--blue);--accent-rgb:var(--blue-rgb)}
+.quote-card{--accent:var(--teal);--accent-rgb:var(--teal-rgb)}
+.return-card{--accent:var(--violet);--accent-rgb:var(--violet-rgb)}
+.loss-card{--accent:var(--amber);--accent-rgb:var(--amber-rgb)}
+h2{font-size:17px;line-height:1.4;margin:0 0 18px;letter-spacing:.02em;font-weight:600;color:var(--accent,var(--navy))}
 .label{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;letter-spacing:.05em;line-height:1.5;margin:16px 0 7px;padding:0 15px}
 .unit{font-size:12px;color:var(--muted);font-family:var(--num)}
 input{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:14px;padding:14px;font-size:20px;line-height:1;font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--ink);outline:none;transition:border-color .15s,background .15s,box-shadow .15s}
@@ -58,13 +65,13 @@ input::placeholder{color:var(--muted);opacity:.6}
 .clear-btn:hover{background:var(--line);color:var(--ink)}
 .input-wrap.has-val .clear-btn{display:flex}
 input:hover{border-color:#94a3b8}
-input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+input:focus{border-color:var(--accent,var(--blue));background:var(--card);box-shadow:0 0 0 4px rgba(var(--accent-rgb,29,78,216),.18)}
 .btnrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .btn{border:1px solid var(--line);background:transparent;border-radius:999px;min-height:44px;padding:12px 6px;font-size:13px;line-height:1;font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
-.btn:hover{background:var(--soft);border-color:var(--blue)}
-.btn:active{transform:scale(.96);background:var(--blue);color:#fff}
-.btn.sel{background:var(--blue);border-color:var(--blue);color:#fff}
-.btn:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn:hover{background:var(--soft);border-color:var(--accent,var(--blue))}
+.btn:active{transform:scale(.96);background:var(--accent,var(--blue));color:#fff}
+.btn.sel{background:var(--accent,var(--blue));border-color:var(--accent,var(--blue));color:#fff}
+.btn:focus-visible,input:focus-visible{outline:2px solid var(--accent,var(--blue));outline-offset:2px}
 /* 签名元素：目标价格答案区 */
 .hero-result{border-top:1px solid var(--line);margin-top:18px;padding-top:18px;text-align:center}
 .hero-label{font-size:12px;color:var(--muted);letter-spacing:.06em}
@@ -75,7 +82,6 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 /* 投资颜色语义：涨绿跌红（符号仍保留，颜色不是唯一信息载体） */
 .unit.pos{color:var(--green-deep)}
 .unit.neg{color:var(--red)}
-.hero-cap{font-size:12px;color:var(--muted);letter-spacing:.04em}
 /* ② 行情表 */
 .quote-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;margin-bottom:4px;border-radius:12px;background:var(--soft);transition:background .2s}
 .quote-row:last-child{margin-bottom:0}
@@ -102,19 +108,20 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 .row strong{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:15px}
 /* 公式速查：两列对齐表格，左列含义，右列变量=公式 */
 .formula-card{background:transparent;border:0;box-shadow:none;margin-top:10px;padding:0}
-.formula-card h2{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 6px}
+.formula-card h2{font-size:12px;color:var(--formula-muted);font-weight:600;margin:0 0 6px}
+.formula-card .tip{color:var(--formula-muted)}
 .ftable{display:grid;grid-template-columns:auto 1fr;gap:2px 20px}
 .ft-row{display:contents}
-.ft-name{font-size:12px;color:var(--muted);line-height:1.7;white-space:nowrap}
-.ft-expr{font:12px/1.7 var(--num);color:var(--muted)}
+.ft-name{font-size:12px;color:var(--formula-muted);line-height:1.7;white-space:nowrap}
+.ft-expr{font:12px/1.7 var(--num);color:var(--formula-muted)}
 .tip{font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px}
 @media(max-width:390px){.hero h1{font-size:15px}.hero-num{font-size:44px}.metric .v{font-size:24px}}
 /* 桌面端：目标价格整行；其余三卡并排；公式速查右侧竖列 */
 @media(min-width:1024px){
- .wrap{width:min(1240px,100%);display:grid;grid-template-columns:1.1fr 1fr;gap:7px;align-items:stretch;padding:14px 20px 1px}
- header{grid-column:1/-1;padding:4px 4px 3px}
+ .wrap{width:min(1240px,100%);display:grid;grid-template-columns:1.1fr 1fr;gap:6px;align-items:stretch;padding:10px 20px 1px}
+ header{grid-column:1/-1;padding:4px 4px 8px}
  .hero h1{font-size:15px;margin:4px 0 0}
- .card{margin-top:0;padding:10px 14px}
+ .card{margin-top:0;padding:8px 14px}
  .hero-card{grid-column:1}
  .quote-card{grid-column:2}
  .return-card{grid-column:1}
@@ -178,7 +185,7 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 @media(min-width:1024px) and (max-width:1150px){
  .hero h1{font-size:14px;margin:3px 0 1px}
  .wrap{gap:6px;padding:8px 16px 4px}
- header{padding:2px 4px 4px}
+ header{padding:2px 4px 6px}
  .card{padding:5px 9px}
  .label{margin:3px 0 0}
  input{padding:3px 10px}
@@ -193,7 +200,7 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
   .formula-card{margin-top:4px}
   .ft-name,.ft-expr{font-size:11px}
 }
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}body::before{animation:none!important}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -255,7 +262,7 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 
 <section class="card formula-card">
 <h2>公式速查</h2>
-<p class="tip" style="margin-top:0">P₀ 买入价 · P₁ 当前/目标价 · C 本金 · R 收益率 · X 回本涨幅</p>
+<p class="tip" style="margin:0 0 6px">P₀ 买入价 · P₁ 当前/目标价 · C 本金 · R 收益率 · X 回本涨幅</p>
 <div class="ftable">
 <div class="ft-row"><span class="ft-name">收益率</span><span class="ft-expr">R = P₁ ÷ P₀ − 1</span></div>
 <div class="ft-row"><span class="ft-name">目标价格</span><span class="ft-expr">P₁ = P₀ × (1 + R)</span></div>
@@ -264,7 +271,7 @@ input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(3
 </div>
 </section>
 </main>
-<footer style="text-align:center;padding:18px 0 24px;font-size:12px;color:var(--muted);font-family:var(--num);letter-spacing:.04em">© 2026 Hiro · All rights reserved</footer>
+<footer style="text-align:center;padding:18px 0 24px;font-size:12px;color:var(--muted);font-family:var(--num);letter-spacing:.04em">© 2026 Hiro · 投资收益计算</footer>
 <script>
 const $=id=>document.getElementById(id);
 const nf=new Intl.NumberFormat('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
