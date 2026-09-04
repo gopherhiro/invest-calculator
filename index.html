@@ -116,15 +116,15 @@ input:focus{border-color:var(--accent,var(--blue));background:var(--card);box-sh
 .ft-expr{font:12px/1.7 var(--num);color:var(--formula-muted)}
 .tip{font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px}
 @media(max-width:390px){.hero h1{font-size:15px}.hero-num{font-size:44px}.metric .v{font-size:24px}}
-/* 桌面端：目标价格整行；其余三卡并排；公式速查右侧竖列 */
+/* 桌面端：左列 目标价格 + 快速目标价格；右列 当前收益 + 亏损回本；公式速查全宽 */
 @media(min-width:1024px){
  .wrap{width:min(1240px,100%);display:grid;grid-template-columns:1.1fr 1fr;gap:6px;align-items:stretch;padding:10px 20px 1px}
  header{grid-column:1/-1;padding:4px 4px 8px}
  .hero h1{font-size:15px;margin:4px 0 0}
  .card{margin-top:0;padding:8px 14px}
  .hero-card{grid-column:1}
- .quote-card{grid-column:2}
- .return-card{grid-column:1}
+ .return-card{grid-column:2}
+ .quote-card{grid-column:1}
  .loss-card{grid-column:2}
  .formula-card{grid-column:1/-1}
  h2{font-size:16px;margin:0 0 1px;padding:0 11px}
@@ -229,10 +229,6 @@ input:focus{border-color:var(--accent,var(--blue));background:var(--card);box-sh
 </div>
 </section>
 
-<section class="card quote-card">
-<div class="targets" id="targets"></div>
-</section>
-
 <section class="card return-card">
 <h2>当前收益</h2>
 <div class="label sell-label"><span>卖出/当前价格（P₁）</span></div>
@@ -243,6 +239,10 @@ input:focus{border-color:var(--accent,var(--blue));background:var(--card);box-sh
 <div class="metric"><div class="k">收益率（R）</div><div class="v" id="currentRate">—</div></div>
 <div class="metric"><div class="k">盈亏金额（G）</div><div class="v" id="gain">—</div></div>
 </div>
+</section>
+
+<section class="card quote-card">
+<div class="targets" id="targets"></div>
 </section>
 
 <section class="card loss-card">
